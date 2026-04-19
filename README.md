@@ -1,16 +1,16 @@
 # Token Extractor
 
-A Figma plugin that extracts design tokens from selected frames and outputs [Tokens Studio](https://tokens.studio/)-compatible JSON, with automatic 3-tier naming conventions.
+A Figma plugin that extracts design tokens from selected frames and outputs [Tokens Studio](https://tokens.studio/)-compatible JSON, with automatic 3-tier naming conventions and multi-frame conflict resolution.
 
-![Token Extractor plugin screenshot](readme-screenshot.png)
+![Token Extractor plugin screenshot](screenshot.png)
 
 ---
 
 ## Why this exists
 
-When inheriting a product without a published component library, reconstructing the implicit design system is tedious and error-prone. This plugin automates the extraction step: select any frame, run the plugin, and get a structured token file you can import directly into Tokens Studio.
+When inheriting a product without a published component library, reconstructing the implicit design system is tedious and error-prone. This plugin automates the extraction step — select any frame, run the plugin, and get a structured token file you can import directly into Tokens Studio.
 
-The longer-term goal is to extract from multiple frames across multiple files and incrementally build a design system by comparing and reconciling tokens across extractions.
+Extract from multiple frames across multiple files to incrementally build a design system. When two frames produce similar but not identical values, the plugin surfaces conflicts side by side so you can make an informed decision about which value to keep.
 
 ---
 
@@ -34,7 +34,22 @@ Tokens are named using a 3-tier primitive convention:
 | Spacing | `spacing.md` |
 | Radius | `radius.sm` |
 
-Naming is currently rules-based (HSL analysis for colours, size scales for typography and spacing). An optional Anthropic API layer for semantic naming is planned.
+Naming is rules-based (HSL analysis for colours, size scales for typography and spacing). An optional Anthropic API layer for semantic naming is planned.
+
+---
+
+## Multi-frame workflow
+
+1. Extract from frame 1 — establishes your baseline token set
+2. Click **Add another frame** and select a second frame
+3. The plugin compares the new extraction against the baseline and shows:
+   - **Conflicts** — similar values shown side by side with three options: Keep existing / Use new / Keep both
+   - **New tokens** — values not in the baseline, added automatically
+   - **Matched** — exact matches, collapsed by default
+4. Review conflicts, then click **Accept all suggestions**
+5. You're returned to the results view with the merged token set
+6. Repeat across as many frames as needed
+7. Export when ready
 
 ---
 
@@ -83,18 +98,19 @@ Tokens are exported as [Tokens Studio](https://tokens.studio/) compatible JSON, 
 2. Run the plugin via **Plugins → Development → token-extractor**
 3. Click **Extract from selected frame**
 4. Review the extracted tokens
-5. Click **Export as Tokens Studio JSON** to download `tokens.json`
-6. Import into Tokens Studio via **Settings → Load from file/folder**
+5. To build on the token set, click **Add another frame**, select another frame, and extract again
+6. Resolve any conflicts in the comparison view
+7. Click **Export as Tokens Studio JSON** to download `tokens.json`
+8. Import into Tokens Studio via **Settings → Load from file/folder**
 
 ---
 
 ## Roadmap
 
 - [ ] Check `node.boundVariables` before extracting raw values -- use existing token names where present
-- [ ] Fix gray misclassification (raise saturation threshold for neutral detection)
-- [ ] Improve duplicate token handling -- flag conflicts instead of auto-numbering
-- [ ] Multi-frame comparison and reconciliation flow
-- [ ] Persistent token store across extractions within a session
+- [ ] Fix intra-frame duplicate handling -- surface shade collisions in the conflict UI
+- [ ] Persist token store across plugin sessions using Figma's `clientStorage` API
+- [ ] Write-back to Figma canvas -- apply winning token to all layers using the losing value
 - [ ] Optional Anthropic API layer for semantic naming suggestions
 - [ ] Tier 2 token generation (primitive → semantic mapping)
 
@@ -110,5 +126,5 @@ Tokens are exported as [Tokens Studio](https://tokens.studio/) compatible JSON, 
 
 ## Author
 
-[Tiffany O'Keeffe](https://tiffanyokeeffe.com)
+[Tiffany O'Keeffe](https://github.com/tiffymoon)
 Senior Product Designer specializing in enterprise UX, SaaS, and design systems.

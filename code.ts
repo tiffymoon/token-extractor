@@ -1,5 +1,5 @@
 figma.showUI(__html__, { width: 400, height: 500, themeColors: true } as any);
-
+let baselineTokens: Record<string, any> | null = null;
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'extract') {
     const selection = figma.currentPage.selection;
@@ -13,12 +13,22 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const node = selection[0];
-    const tokens = extractTokens(node);
+    const tokens = extractTokens(node) as Record<string, any>;
 
-    figma.ui.postMessage({
-      type: 'extracted',
-      tokens
-    });
+    if (!baselineTokens) {
+     baselineTokens = tokens;
+     figma.ui.postMessage({
+       type: 'extracted',
+       tokens,
+       isBaseline: true
+      });
+    } else {
+     const comparison = compareTokens(baselineTokens, tokens);
+     figma.ui.postMessage({
+       type: 'comparison',
+       comparison
+      });
+}
   }
 };
 
@@ -75,7 +85,7 @@ function generateTokenNames(tokens: {
     let tier2 = '';
     let shade = '';
 
-    if (s < 10) {
+    if (s < 20) {
       tier2 = 'neutral';
     } else if (h >= 0 && h < 20) {
       tier2 = 'red';
@@ -167,6 +177,143 @@ function generateTokenNames(tokens: {
   });
 
   return named;
+}
+
+function compareTokens(
+  baseline: Record<string, any>,
+  incoming: Record<string, any>
+): object {
+  const merged: Record<string, any> = {};
+  const conflicts: Array<any> = [];
+  const added: Record<string, any> = {};
+
+  // Compare colors
+  Object.entries(incoming.colors).forEach(([inKey, inToken]: [string, any]) => {
+    const inHex = inToken.value;
+    const { h: inH, s: inS, l: inL } = hexToHSL(inHex);
+
+    // Check for exact match
+    const exactMatch = Object.entries(baseline.colors).find(
+      ([, bToken]: [string, any]) => bToken.value === inHex
+    );
+
+    if (exactMatch) {
+      merged[exactMatch[0]] = exactMatch[1];
+      return;
+    }
+
+    // Check for near match -- same hue family, within 15 lightness points
+    const nearMatch = Object.entries(baseline.colors).find(
+      ([bKey, bToken]: [string, any]) => {
+        const { h: bH, s: bS, l: bL } = hexToHSL(bToken.value);
+        const sameFamily = getHueFamily(inH, inS) === getHueFamily(bH, bS);
+        const closeLightness = Math.abs(inL - bL) <= 15;
+        return sameFamily && closeLightness;
+      }
+    );
+
+    if (nearMatch) {
+      conflicts.push({
+        type: 'color',
+        existing: { key: nearMatch[0], value: (nearMatch[1] as any).value },
+        incoming: { key: inKey, value: inHex }
+      });
+      return;
+    }
+
+    // No match -- it's new
+    added[inKey] = inToken;
+  });
+
+  // Compare typography
+  Object.entries(incoming.typography).forEach(([inKey, inToken]: [string, any]) => {
+    const exactMatch = Object.entries(baseline.typography).find(
+      ([bKey]) => bKey === inKey
+    );
+
+    if (exactMatch) {
+      merged[exactMatch[0]] = exactMatch[1];
+      return;
+    }
+
+    // Check for near match -- same scale key but different values
+    const nearMatch = Object.entries(baseline.typography).find(
+      ([bKey]) => {
+        const inParts = inKey.split('.');
+        const bParts = bKey.split('.');
+        return inParts[1] === bParts[1] && inParts[2] === bParts[2];
+      }
+    );
+
+    if (nearMatch) {
+      conflicts.push({
+        type: 'typography',
+        existing: { key: nearMatch[0], value: (nearMatch[1] as any).value },
+        incoming: { key: inKey, value: inToken.value }
+      });
+      return;
+    }
+
+    added[inKey] = inToken;
+  });
+
+  // Compare spacing
+  Object.entries(incoming.spacing).forEach(([inKey, inToken]: [string, any]) => {
+    if (baseline.spacing[inKey]) {
+      merged[inKey] = baseline.spacing[inKey];
+    } else {
+      const nearMatch = Object.entries(baseline.spacing).find(
+        ([, bToken]: [string, any]) =>
+          Math.abs(parseFloat(bToken.value) - parseFloat(inToken.value)) <= 2
+      );
+
+      if (nearMatch) {
+        conflicts.push({
+          type: 'spacing',
+          existing: { key: nearMatch[0], value: (nearMatch[1] as any).value },
+          incoming: { key: inKey, value: inToken.value }
+        });
+      } else {
+        added[inKey] = inToken;
+      }
+    }
+  });
+
+  // Compare radii
+  Object.entries(incoming.radii).forEach(([inKey, inToken]: [string, any]) => {
+    if (baseline.radii[inKey]) {
+      merged[inKey] = baseline.radii[inKey];
+    } else {
+      const nearMatch = Object.entries(baseline.radii).find(
+        ([, bToken]: [string, any]) =>
+          Math.abs(parseFloat(bToken.value) - parseFloat(inToken.value)) <= 1
+      );
+
+      if (nearMatch) {
+        conflicts.push({
+          type: 'radius',
+          existing: { key: nearMatch[0], value: (nearMatch[1] as any).value },
+          incoming: { key: inKey, value: inToken.value }
+        });
+      } else {
+        added[inKey] = inToken;
+      }
+    }
+  });
+
+  return { merged, conflicts, added };
+}
+
+function getHueFamily(h: number, s: number): string {
+  if (s < 20) return 'neutral';
+  if (h >= 0 && h < 20) return 'red';
+  if (h >= 20 && h < 45) return 'orange';
+  if (h >= 45 && h < 70) return 'yellow';
+  if (h >= 70 && h < 165) return 'green';
+  if (h >= 165 && h < 255) return 'blue';
+  if (h >= 255 && h < 290) return 'purple';
+  if (h >= 290 && h < 340) return 'pink';
+  return 'red';
 }
 
 function extractTokens(node: SceneNode): object {

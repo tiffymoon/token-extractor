@@ -107,6 +107,122 @@
         line-height: 1.6;
       }
 
+      #state-comparison { display: none; }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0 6px;
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 8px;
+      }
+
+      .section-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0;
+      }
+
+      .section-title.conflicts { color: #e53e3e; }
+      .section-title.added { color: #38a169; }
+      .section-title.merged { color: #999; }
+
+      .section-count {
+        font-size: 11px;
+        color: #999;
+      }
+
+      .collapsible {
+        cursor: pointer;
+      }
+
+      .conflict-card {
+        background: #fff8f8;
+        border: 1px solid #fed7d7;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+
+      .conflict-swatches {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .conflict-swatch-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .conflict-swatch {
+        width: 100%;
+        height: 40px;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .conflict-swatch-label {
+        font-size: 10px;
+        color: #666;
+        font-family: monospace;
+      }
+
+      .conflict-swatch-key {
+        font-size: 10px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .conflict-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .conflict-actions button {
+        flex: 1;
+        padding: 6px 4px;
+        font-size: 11px;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+        background: #fff;
+        color: #333;
+        cursor: pointer;
+      }
+
+      .conflict-actions button:hover {
+        background: #f0f0f0;
+      }
+
+      .conflict-actions button.selected {
+        background: #18a0fb;
+        color: white;
+        border-color: #18a0fb;
+      }
+
+      .added-card {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 12px;
+      }
+
+      .added-swatch {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+        flex-shrink: 0;
+}
+
       #state-empty { display: block; }
       #state-results { display: none; }
     </style>
@@ -126,9 +242,45 @@
       <h2>Extracted Tokens</h2>
       <div class="summary" id="summary"></div>
       <div id="token-list"></div>
-      <button id="extract-another-btn" class="secondary">Extract from another frame</button>
+      <button id="extract-another-btn" class="secondary">Add and extract from another frame</button>
       <button id="export-btn">Export as Tokens Studio JSON</button>
     </div>
+
+    <!-- State 3: Comparison -->
+<div id="state-comparison">
+  <h2>Review Tokens</h2>
+  <div class="summary" id="comparison-summary"></div>
+
+  <!-- Conflicts -->
+  <div id="conflicts-section">
+    <div class="section-header">
+      <h3 class="section-title conflicts">⚠️ Conflicts</h3>
+      <span class="section-count" id="conflicts-count"></span>
+    </div>
+    <div id="conflicts-list"></div>
+  </div>
+
+  <!-- New tokens -->
+  <div id="added-section">
+    <div class="section-header">
+      <h3 class="section-title added">✚ New tokens</h3>
+      <span class="section-count" id="added-count"></span>
+    </div>
+    <div id="added-list"></div>
+  </div>
+
+  <!-- Merged -->
+  <div id="merged-section">
+    <div class="section-header collapsible" id="merged-header">
+      <h3 class="section-title merged">✓ Matched</h3>
+      <span class="section-count" id="merged-count"></span>
+    </div>
+    <div id="merged-list" style="display:none"></div>
+  </div>
+
+  <button id="accept-all-btn">Accept all suggestions</button>
+  <button id="export-comparison-btn" class="secondary" style="margin-top:8px">Export as Tokens Studio JSON</button>
+</div>
 
     <script>
       let tokenStore = {};
@@ -146,6 +298,10 @@
         if (msg.type === 'extracted') {
           tokenStore = msg.tokens;
           showResults(msg.tokens);
+        }
+
+        if (msg.type === 'comparison') {
+          showComparison(msg.comparison);
         }
       };
 
@@ -171,6 +327,153 @@
         a.download = 'tokens.json';
         a.click();
       });
+      let resolvedTokens = {};
+      let conflictDecisions = {};
+
+      function showComparison(comparison) {
+        document.getElementById('state-empty').style.display = 'none';
+        document.getElementById('state-results').style.display = 'none';
+        document.getElementById('state-comparison').style.display = 'block';
+
+        const { merged, conflicts, added } = comparison;
+
+        document.getElementById('comparison-summary').innerHTML =
+          `<strong>${conflicts.length}</strong> conflicts · <strong>${Object.keys(added).length}</strong> new tokens · <strong>${Object.keys(merged).length}</strong> matched`;
+
+        document.getElementById('conflicts-count').textContent = conflicts.length;
+        document.getElementById('added-count').textContent = Object.keys(added).length;
+        document.getElementById('merged-count').textContent = Object.keys(merged).length;
+
+        // Render conflicts
+        const conflictsList = document.getElementById('conflicts-list');
+        conflictsList.innerHTML = '';
+        conflictDecisions = {};
+
+        conflicts.forEach((conflict, index) => {
+          const isColor = conflict.type === 'color';
+          const card = document.createElement('div');
+          card.className = 'conflict-card';
+
+          if (isColor) {
+            card.innerHTML = `
+              <div class="conflict-swatches">
+                <div class="conflict-swatch-item">
+                  <div class="conflict-swatch" style="background:${conflict.existing.value}"></div>
+                  <div class="conflict-swatch-key">${conflict.existing.key}</div>
+                  <div class="conflict-swatch-label">${conflict.existing.value}</div>
+                </div>
+                <div class="conflict-swatch-item">
+                  <div class="conflict-swatch" style="background:${conflict.incoming.value}"></div>
+                  <div class="conflict-swatch-key">${conflict.incoming.key}</div>
+                  <div class="conflict-swatch-label">${conflict.incoming.value}</div>
+                </div>
+              </div>
+              <div class="conflict-actions">
+                <button onclick="resolveConflict(${index}, 'existing', this)">Keep left</button>
+                <button onclick="resolveConflict(${index}, 'incoming', this)">Keep right</button>
+                <button onclick="resolveConflict(${index}, 'both', this)">Keep both</button>
+              </div>`;
+          } else {
+            card.innerHTML = `
+              <div style="font-size:12px; margin-bottom:8px;">
+                <div style="color:#666; margin-bottom:2px">${conflict.type}</div>
+                <div><strong>${conflict.existing.key}</strong> vs <strong>${conflict.incoming.key}</strong></div>
+              </div>
+              <div class="conflict-actions">
+                <button onclick="resolveConflict(${index}, 'existing', this)">Keep existing</button>
+                <button onclick="resolveConflict(${index}, 'incoming', this)">Use new</button>
+                <button onclick="resolveConflict(${index}, 'both', this)">Keep both</button>
+              </div>`;
+          }
+
+          conflictsList.appendChild(card);
+          conflictDecisions[index] = { decision: 'existing', conflict };
+        });
+
+        // Render added tokens
+        const addedList = document.getElementById('added-list');
+        addedList.innerHTML = '';
+        Object.entries(added).forEach(([key, token]) => {
+          const t = token;
+          const isColor = t.type === 'color';
+          const div = document.createElement('div');
+          div.className = 'added-card';
+          if (isColor) {
+            div.innerHTML = `
+              <div class="added-swatch" style="background:${t.value}"></div>
+              <span>${key}</span>
+              <span class="token-value">${t.value}</span>`;
+          } else {
+            div.innerHTML = `
+              <span>${key}</span>
+              <span class="token-value">${t.value}</span>`;
+          }
+          addedList.appendChild(div);
+        });
+
+        // Merged -- collapsible
+        document.getElementById('merged-header').addEventListener('click', () => {
+          const list = document.getElementById('merged-list');
+          list.style.display = list.style.display === 'none' ? 'block' : 'none';
+        });
+
+        const mergedList = document.getElementById('merged-list');
+        mergedList.innerHTML = '';
+        Object.entries(merged).forEach(([key, token]) => {
+          const t = token;
+          const div = document.createElement('div');
+          div.className = 'added-card';
+          div.innerHTML = `<span>${key}</span><span class="token-value">${t.value || t}</span>`;
+          mergedList.appendChild(div);
+        });
+
+        resolvedTokens = { ...merged, ...added };
+      }
+
+      function resolveConflict(index, decision, btn) {
+        conflictDecisions[index].decision = decision;
+
+        // Update button styles
+        const card = btn.closest('.conflict-card');
+        card.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        // Update resolved tokens
+        const conflict = conflictDecisions[index].conflict;
+        if (decision === 'existing') {
+          resolvedTokens[conflict.existing.key] = { value: conflict.existing.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+          delete resolvedTokens[conflict.incoming.key];
+        } else if (decision === 'incoming') {
+          resolvedTokens[conflict.incoming.key] = { value: conflict.incoming.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+          delete resolvedTokens[conflict.existing.key];
+        } else {
+          resolvedTokens[conflict.existing.key] = { value: conflict.existing.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+          resolvedTokens[conflict.incoming.key] = { value: conflict.incoming.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+        }
+      }
+
+      document.getElementById('accept-all-btn').addEventListener('click', () => {
+        tokenStore = resolvedTokens;
+        document.getElementById('state-comparison').style.display = 'none';
+        document.getElementById('state-results').style.display = 'block';
+        showResults(tokenStore);
+      });
+
+      document.getElementById('export-comparison-btn').addEventListener('click', () => {
+        exportResolvedTokens();
+      });
+
+      function exportResolvedTokens() {
+        const json = { global: resolvedTokens };
+        const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tokens.json';
+        a.click();
+      }
+
+
 
 function showResults(tokens) {
   document.getElementById('state-empty').style.display = 'none';
@@ -210,10 +513,12 @@ function showResults(tokens) {
     group.className = 'token-group';
     group.innerHTML = '<h3>Typography</h3>';
     Object.entries(tokens.typography).forEach(([key, token]) => {
-      const v = token.value || token;
-      const family = v.fontFamily || 'unknown';
-      const weight = v.fontWeight || 'unknown';
-      const size = v.fontSize ? parseFloat(v.fontSize).toFixed(2) : '?';
+    const v = (token && typeof token === 'object' && token.value && typeof token.value === 'object')
+      ? token.value
+      : (typeof token === 'object' ? token : {});
+    const family = v.fontFamily || 'unknown';
+    const weight = v.fontWeight || 'unknown';
+    const size = v.fontSize ? parseFloat(String(v.fontSize)).toFixed(2) : '?';
       group.innerHTML += `
         <div class="token-item">
           <span>${key}</span>

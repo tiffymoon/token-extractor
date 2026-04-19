@@ -1,0 +1,29 @@
+{
+  "global": {
+    "color.primitive.neutral.50": {
+      "value": {
+        "value": "#FFFFFF",
+        "type": "color"
+      },
+      "type": "color"
+    },
+    "color.primitive.neutral.800": {
+      "value": {
+        "value": "#3A3935",
+        "type": "color"
+      },
+      "type": "color"
+    },
+    "color.primitive.blue.500": {
+      "value": {
+        "value": "#3EBEA3",
+        "type": "color"
+      },
+      "type": "color"
+    },
+    "radius.sm": {
+      "value": "[object Object]",
+      "type": "borderRadius"
+    }
+  }
+}

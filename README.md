@@ -1,40 +1,113 @@
-Below are the steps to get your plugin running. You can also find instructions at:
+# Token Extractor
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+A Figma plugin that extracts design tokens from selected frames and outputs [Tokens Studio](https://tokens.studio/)-compatible JSON, with automatic 3-tier naming conventions.
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
+![Token Extractor plugin screenshot](readme-screenshot.png)
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
+---
 
-  https://nodejs.org/en/download/
+## Why this exists
 
-Next, install TypeScript using the command:
+When inheriting a product without a published component library, reconstructing the implicit design system is tedious and error-prone. This plugin automates the extraction step — select any frame, run the plugin, and get a structured token file you can import directly into Tokens Studio.
 
-  npm install -g typescript
+The longer-term goal is to extract from multiple frames across multiple files and incrementally build a design system by comparing and reconciling tokens across extractions.
 
-Finally, in the directory of your plugin, get the latest type definitions for the plugin API by running:
+---
 
-  npm install --save-dev @figma/plugin-typings
+## What it extracts
 
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid Typescript code.
+- **Colours** — solid fills, classified by hue family and lightness shade
+- **Typography** — font family, weight, and size, mapped to a display/heading/body/caption scale
+- **Spacing** — auto layout item spacing, mapped to an xs–2xl scale
+- **Border radius** — corner radius values, mapped to sm/md/lg/full
 
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
+---
 
-For more information, visit https://www.typescriptlang.org/
+## Token naming
 
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
+Tokens are named using a 3-tier primitive convention:
 
-We recommend writing TypeScript code using Visual Studio code:
+| Type | Example output |
+|------|---------------|
+| Colour | `color.primitive.green.600` |
+| Typography | `typography.body.bold` |
+| Spacing | `spacing.md` |
+| Radius | `radius.sm` |
 
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
+Naming is currently rules-based (HSL analysis for colours, size scales for typography and spacing). An optional Anthropic API layer for semantic naming is planned.
 
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+---
+
+## Output format
+
+Tokens are exported as [Tokens Studio](https://tokens.studio/) compatible JSON, wrapped in a `global` set:
+
+```json
+{
+  "global": {
+    "color.primitive.green.600": {
+      "value": "#00915A",
+      "type": "color"
+    },
+    "spacing.md": {
+      "value": "16",
+      "type": "spacing"
+    }
+  }
+}
+```
+
+---
+
+## Installation
+
+> Requires the [Figma desktop app](https://www.figma.com/downloads/) and Node.js.
+
+1. Clone this repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Build the plugin:
+   ```
+   npm run build
+   ```
+4. In Figma desktop, go to **Plugins → Development → Import plugin from manifest**
+5. Select the `manifest.json` file from this folder
+
+---
+
+## Usage
+
+1. Select a frame in Figma
+2. Run the plugin via **Plugins → Development → token-extractor**
+3. Click **Extract from selected frame**
+4. Review the extracted tokens
+5. Click **Export as Tokens Studio JSON** to download `tokens.json`
+6. Import into Tokens Studio via **Settings → Load from file/folder**
+
+---
+
+## Roadmap
+
+- [ ] Check `node.boundVariables` before extracting raw values -- use existing token names where present
+- [ ] Fix gray misclassification (raise saturation threshold for neutral detection)
+- [ ] Improve duplicate token handling -- flag conflicts instead of auto-numbering
+- [ ] Multi-frame comparison and reconciliation flow
+- [ ] Persistent token store across extractions within a session
+- [ ] Optional Anthropic API layer for semantic naming suggestions
+- [ ] Tier 2 token generation (primitive → semantic mapping)
+
+---
+
+## Tech
+
+- Figma Plugin API
+- TypeScript
+- Tokens Studio JSON format
+
+---
+
+## Author
+
+[Tiffany O'Keeffe](https://tiffanyokeeffe.com) — Senior Product Designer specialising in design systems and fintech.

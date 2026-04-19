@@ -8,7 +8,7 @@ A Figma plugin that extracts design tokens from selected frames and outputs [Tok
 
 ## Why this exists
 
-When inheriting a product without a published component library, reconstructing the implicit design system is tedious and error-prone. This plugin automates the extraction step — select any frame, run the plugin, and get a structured token file you can import directly into Tokens Studio.
+When inheriting a product without a published component library, reconstructing the implicit design system is tedious and error-prone. This plugin automates the extraction step: select any frame, run the plugin, and get a structured token file you can import directly into Tokens Studio.
 
 The longer-term goal is to extract from multiple frames across multiple files and incrementally build a design system by comparing and reconciling tokens across extractions.
 
@@ -110,4 +110,5 @@ Tokens are exported as [Tokens Studio](https://tokens.studio/) compatible JSON, 
 
 ## Author
 
-[Tiffany O'Keeffe](https://tiffanyokeeffe.com) — Senior Product Designer specialising in design systems and fintech.
+[Tiffany O'Keeffe](https://tiffanyokeeffe.com)
+Senior Product Designer specializing in enterprise UX, SaaS, and design systems.

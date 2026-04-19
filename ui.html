@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        color: #333;
+        background: #fff;
+        padding: 16px;
+        width: 400px;
+      }
+
+      h2 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      p {
+        color: #666;
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+
+      .error {
+        color: #e53e3e;
+        margin-bottom: 16px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        background: #18a0fb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+
+      button:hover {
+        background: #0d8de3;
+      }
+
+      button.secondary {
+        background: #f0f0f0;
+        color: #333;
+      }
+
+      button.secondary:hover {
+        background: #e0e0e0;
+      }
+
+      .token-group {
+        margin-bottom: 16px;
+      }
+
+      .token-group h3 {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #999;
+        margin-bottom: 8px;
+      }
+
+      .token-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 12px;
+      }
+
+      .color-swatch {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+        flex-shrink: 0;
+      }
+
+      .token-value {
+        color: #666;
+        margin-left: auto;
+        font-family: monospace;
+      }
+
+      .summary {
+        background: #f7f9fc;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 16px;
+        font-size: 12px;
+        color: #555;
+        line-height: 1.6;
+      }
+
+      #state-empty { display: block; }
+      #state-results { display: none; }
+    </style>
+  </head>
+  <body>
+
+    <!-- State 1: Empty -->
+    <div id="state-empty">
+      <h2>Token Extractor</h2>
+      <p>Select a frame in Figma then click Extract to begin building your token system.</p>
+      <div id="error-msg" class="error" style="display:none"></div>
+      <button id="extract-btn">Extract from selected frame</button>
+    </div>
+
+    <!-- State 2: Results -->
+    <div id="state-results">
+      <h2>Extracted Tokens</h2>
+      <div class="summary" id="summary"></div>
+      <div id="token-list"></div>
+      <button id="extract-another-btn" class="secondary">Extract from another frame</button>
+      <button id="export-btn">Export as Tokens Studio JSON</button>
+    </div>
+
+    <script>
+      let tokenStore = {};
+
+      // Handle messages from code.ts
+      window.onmessage = (event) => {
+        const msg = event.data.pluginMessage;
+        if (!msg) return;
+
+        if (msg.type === 'error') {
+          document.getElementById('error-msg').style.display = 'block';
+          document.getElementById('error-msg').textContent = msg.message;
+        }
+
+        if (msg.type === 'extracted') {
+          tokenStore = msg.tokens;
+          showResults(msg.tokens);
+        }
+      };
+
+      // Extract button
+      document.getElementById('extract-btn').addEventListener('click', () => {
+        document.getElementById('error-msg').style.display = 'none';
+        parent.postMessage({ pluginMessage: { type: 'extract' } }, '*');
+      });
+
+      // Extract another button
+      document.getElementById('extract-another-btn').addEventListener('click', () => {
+        document.getElementById('state-results').style.display = 'none';
+        document.getElementById('state-empty').style.display = 'block';
+      });
+
+      // Export button
+      document.getElementById('export-btn').addEventListener('click', () => {
+        const json = buildTokenStudioJSON(tokenStore);
+        const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tokens.json';
+        a.click();
+      });
+
+function showResults(tokens) {
+  document.getElementById('state-empty').style.display = 'none';
+  document.getElementById('state-results').style.display = 'block';
+
+  const colorCount = Object.keys(tokens.colors).length;
+  const typoCount = Object.keys(tokens.typography).length;
+  const spacingCount = Object.keys(tokens.spacing).length;
+  const radiiCount = Object.keys(tokens.radii).length;
+
+  document.getElementById('summary').innerHTML =
+    `Found <strong>${colorCount}</strong> colors, <strong>${typoCount}</strong> text styles, <strong>${spacingCount}</strong> spacing values, <strong>${radiiCount}</strong> radii`;
+
+  const list = document.getElementById('token-list');
+  list.innerHTML = '';
+
+  // Colors
+  if (colorCount > 0) {
+    const group = document.createElement('div');
+    group.className = 'token-group';
+    group.innerHTML = '<h3>Colors</h3>';
+    Object.entries(tokens.colors).forEach(([key, token]) => {
+      const hex = token.value || token;
+      group.innerHTML += `
+        <div class="token-item">
+          <div class="color-swatch" style="background:${hex}"></div>
+          <span>${key}</span>
+          <span class="token-value">${hex}</span>
+        </div>`;
+    });
+    list.appendChild(group);
+  }
+
+  // Typography
+  if (typoCount > 0) {
+    const group = document.createElement('div');
+    group.className = 'token-group';
+    group.innerHTML = '<h3>Typography</h3>';
+    Object.entries(tokens.typography).forEach(([key, token]) => {
+      const v = token.value || token;
+      const family = v.fontFamily || 'unknown';
+      const weight = v.fontWeight || 'unknown';
+      const size = v.fontSize ? parseFloat(v.fontSize).toFixed(2) : '?';
+      group.innerHTML += `
+        <div class="token-item">
+          <span>${key}</span>
+          <span class="token-value">${family} ${weight} ${size}px</span>
+        </div>`;
+    });
+    list.appendChild(group);
+  }
+
+  // Spacing
+  if (spacingCount > 0) {
+    const group = document.createElement('div');
+    group.className = 'token-group';
+    group.innerHTML = '<h3>Spacing</h3>';
+    Object.entries(tokens.spacing).forEach(([key, token]) => {
+      const val = token.value || token;
+      group.innerHTML += `
+        <div class="token-item">
+          <span>${key}</span>
+          <span class="token-value">${val}px</span>
+        </div>`;
+    });
+    list.appendChild(group);
+  }
+
+  // Radii
+  if (radiiCount > 0) {
+    const group = document.createElement('div');
+    group.className = 'token-group';
+    group.innerHTML = '<h3>Border Radius</h3>';
+    Object.entries(tokens.radii).forEach(([key, token]) => {
+      const val = token.value || token;
+      group.innerHTML += `
+        <div class="token-item">
+          <span>${key}</span>
+          <span class="token-value">${val}px</span>
+        </div>`;
+    });
+    list.appendChild(group);
+  }
+}
+
+      function buildTokenStudioJSON(tokens) {
+        const json = {
+         global: {}
+       };
+
+         Object.entries(tokens.colors).forEach(([key, value]) => {
+           json.global[key] = { value, type: 'color' };
+         });
+
+          Object.entries(tokens.spacing).forEach(([key, value]) => {
+            json.global[key] = { value: String(value), type: 'spacing' };
+         });
+
+          Object.entries(tokens.radii).forEach(([key, value]) => {
+            json.global[key] = { value: String(value), type: 'borderRadius' };
+         });
+
+  return json;
+}
+    </script>
+  </body>
+</html>

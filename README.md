@@ -1,72 +1,87 @@
 # Token Extractor
 
-A Figma plugin that extracts design tokens from selected frames and outputs [Tokens Studio](https://tokens.studio/)-compatible JSON, with automatic 3-tier naming conventions and multi-frame conflict resolution.
+A Figma plugin that reverse-engineers a structured token system from any existing Figma file. Select a frame, extract, resolve conflicts, export — and repeat across as many frames as you need to build your token set progressively.
 
-![Token Extractor plugin screenshot](screenshot.png)
+Output is [Tokens Studio](https://tokens.studio/)-compatible JSON, importable immediately.
 
 ---
 
 ## Why this exists
 
-When inheriting a product without a published component library, reconstructing the implicit design system is tedious and error-prone. This plugin automates the extraction step — select any frame, run the plugin, and get a structured token file you can import directly into Tokens Studio.
-
-Extract from multiple frames across multiple files to incrementally build a design system. When two frames produce similar but not identical values, the plugin surfaces conflicts side by side so you can make an informed decision about which value to keep.
+When inheriting a product file with no component library or token system, reconstructing the implicit design decisions is slow and error-prone. This plugin automates the extraction step — and more importantly, it surfaces the inconsistencies so you can make informed decisions about what the system should actually be.
 
 ---
 
 ## What it extracts
 
-- **Colours** — solid fills, classified by hue family and lightness shade
-- **Typography** — font family, weight, and size, mapped to a display/heading/body/caption scale
-- **Spacing** — auto layout item spacing, mapped to an xs–2xl scale
-- **Border radius** — corner radius values, mapped to sm/md/lg/full
+- **Colors** — solid fills, grouped by hue family and sorted light to dark
+- **Typography** — font family, weight, size, line height, letter spacing
+- **Spacing** — auto layout item spacing
+- **Border radius** — corner radius values
+- **Border width** — stroke weights
+- **Shadows** — drop shadow values (x, y, blur, spread, color, opacity)
 
 ---
 
 ## Token naming
 
-Tokens are named using a 3-tier primitive convention:
+Rules-based naming using HSL analysis and scale mapping:
 
-| Type | Example output |
-|------|---------------|
-| Colour | `color.primitive.green.600` |
-| Typography | `typography.body.bold` |
+| Type | Example |
+|------|---------|
+| Color | `color.primitive.blue.600` |
+| Typography | `typography.body-sm.regular` |
 | Spacing | `spacing.md` |
 | Radius | `radius.sm` |
+| Border width | `borderWidth.md` |
+| Shadow | `shadow-1` |
 
-Naming is rules-based (HSL analysis for colours, size scales for typography and spacing). An optional Anthropic API layer for semantic naming is planned.
+---
+
+## Conflict resolution
+
+Real files aren't clean. When two values are similar but not identical — two near-identical greys, two body font sizes that are 1px apart — the plugin surfaces them side by side and asks you to decide:
+
+- **Keep left** — keep the existing value
+- **Keep right** — use the new value
+- **Keep both** — treat them as distinct tokens
+- **Keep both for all** — resolve all conflicts in one click
+
+The plugin also **remembers your decisions**. On future extractions, conflicts matching a previous resolution are auto-resolved — only genuinely new conflicts surface for review.
 
 ---
 
 ## Multi-frame workflow
 
-1. Extract from frame 1 — establishes your baseline token set
-2. Click **Add another frame** and select a second frame
-3. The plugin compares the new extraction against the baseline and shows:
-   - **Conflicts** — similar values shown side by side with three options: Keep existing / Use new / Keep both
-   - **New tokens** — values not in the baseline, added automatically
-   - **Matched** — exact matches, collapsed by default
-4. Review conflicts, then click **Accept all suggestions**
-5. You're returned to the results view with the merged token set
-6. Repeat across as many frames as needed
-7. Export when ready
+1. Select a frame → **Extract from selected frame**
+2. Review the extracted tokens (grouped by category, collapsible)
+3. Click **Add and extract from another frame**
+4. Review conflicts and new tokens in the comparison view
+5. Accept and repeat across as many frames as needed
+6. Export when ready
 
 ---
 
 ## Output format
 
-Tokens are exported as [Tokens Studio](https://tokens.studio/) compatible JSON, wrapped in a `global` set:
+Tokens Studio-compatible JSON wrapped in a `global` set:
 
 ```json
 {
   "global": {
-    "color.primitive.green.600": {
-      "value": "#00915A",
+    "color.primitive.blue.600": {
+      "value": "#1A3FA0",
       "type": "color"
     },
-    "spacing.md": {
-      "value": "16",
-      "type": "spacing"
+    "typography.body.regular": {
+      "value": {
+        "fontFamily": "Open Sans",
+        "fontSize": "14.00",
+        "fontWeight": "Regular",
+        "lineHeight": "19.00",
+        "letterSpacing": "0.00"
+      },
+      "type": "typography"
     }
   }
 }
@@ -76,55 +91,39 @@ Tokens are exported as [Tokens Studio](https://tokens.studio/) compatible JSON, 
 
 ## Installation
 
-> Requires the [Figma desktop app](https://www.figma.com/downloads/) and Node.js.
+Requires the [Figma desktop app](https://www.figma.com/downloads/) and Node.js.
 
-1. Clone this repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Build the plugin:
-   ```
-   npm run build
-   ```
-4. In Figma desktop, go to **Plugins → Development → Import plugin from manifest**
-5. Select the `manifest.json` file from this folder
+```bash
+git clone https://github.com/tiffymoon/token-extractor.git
+cd token-extractor
+npm install
+npm run build
+```
 
----
-
-## Usage
-
-1. Select a frame in Figma
-2. Run the plugin via **Plugins → Development → token-extractor**
-3. Click **Extract from selected frame**
-4. Review the extracted tokens
-5. To build on the token set, click **Add another frame**, select another frame, and extract again
-6. Resolve any conflicts in the comparison view
-7. Click **Export as Tokens Studio JSON** to download `tokens.json`
-8. Import into Tokens Studio via **Settings → Load from file/folder**
+In Figma desktop: **Plugins → Development → Import plugin from manifest** → select `manifest.json`.
 
 ---
 
 ## Roadmap
 
-- [ ] Check `node.boundVariables` before extracting raw values -- use existing token names where present
-- [ ] Fix intra-frame duplicate handling -- surface shade collisions in the conflict UI
-- [ ] Persist token store across plugin sessions using Figma's `clientStorage` API
-- [ ] Write-back to Figma canvas -- apply winning token to all layers using the losing value
-- [ ] Optional Anthropic API layer for semantic naming suggestions
-- [ ] Tier 2 token generation (primitive → semantic mapping)
+- [ ] Semantic token layer — map primitives to roles (brand, text, background, status)
+- [ ] Write-back to Figma canvas — apply the winning token to all layers using the losing value
+- [ ] Persist token store across plugin sessions
+- [ ] Figma Variables support — detect and respect existing bound variables
+- [ ] Publish to Figma Community
 
 ---
 
-## Tech
+## Built with
 
-- Figma Plugin API
+- [Figma Plugin API](https://www.figma.com/plugin-docs/)
 - TypeScript
-- Tokens Studio JSON format
+- [Claude](https://claude.ai) — AI pair programming
+- [VS Code](https://code.visualstudio.com)
+- [Tokens Studio](https://tokens.studio/) — target format and testing environment
 
 ---
 
 ## Author
 
-[Tiffany O'Keeffe](https://github.com/tiffymoon)
-Senior Product Designer specializing in enterprise UX, SaaS, and design systems.
+[Tiffany O'Keeffe](https://github.com/tiffymoon) — Senior Product Designer specialising in enterprise UX, SaaS, and design systems.

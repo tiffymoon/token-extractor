@@ -1,88 +1,97 @@
 # Token Extractor — Progress Log
 
 ## What this is
-A Figma plugin that extracts design tokens from a selected frame and outputs Tokens Studio-compatible JSON. The longer-term goal is to run it across multiple frames/files and incrementally build a design system by comparing and reconciling tokens across extractions.
 
-**Primary use case:** Reverse-engineering an implicit design system from existing product files where the component library source file is unavailable.
+A Figma plugin that reverse-engineers a structured token system from existing product files. The primary use case is inheriting a Figma file with no component library or token system and needing to reconstruct the implicit design decisions quickly.
+
+Output is Tokens Studio-compatible JSON. Multi-frame extraction lets you build a token set progressively across a whole product.
 
 ---
 
 ## Decisions & why
 
-- **Output format:** Tokens Studio JSON (not W3C or Style Dictionary) because it maps directly to an existing workflow and can be tested immediately by importing into the Tokens Studio plugin.
-- **Token naming:** 3-tier structure (primitive → semantic → component). Currently only generating Tier 1 (primitive) automatically. Tier 2 and 3 are future work.
-- **Naming logic:** Rules-based (HSL colour analysis, font size scales, spacing t-shirt sizes) rather than Anthropic API calls. Chosen to avoid API costs during testing. API layer is designed to slot in later without restructuring.
-- **No write-back to Figma canvas:** Plugin is read-only for now. Output is a downloadable JSON file only. Write-back (applying resolved token to all layers using a colour) is planned as a future power feature.
-- **Conflict resolution defaults to "keep existing":** When the user hits Accept All, the existing token wins on all conflicts. Individual decisions can be overridden before accepting.
-- **Resizable UI:** Not currently supported by Figma's TypeScript types so disabled for now. Width set to 400px as a reasonable default.
+- **Output format:** Tokens Studio JSON — maps directly to an existing workflow and can be tested immediately by importing into the Tokens Studio plugin.
+- **Token naming:** Rules-based (HSL colour analysis, font size scales, spacing t-shirt sizes). Chosen to avoid API costs during testing. Semantic naming via Anthropic API is planned.
+- **Conflict resolution at extraction time:** Any two values that map to the same token bucket are flagged immediately — not silently suffixed. The designer decides.
+- **Learned preferences:** Conflict decisions are persisted via `clientStorage` and auto-applied to future extractions. Only new conflicts surface for review.
+- **No write-back to Figma canvas:** Plugin is read-only for now. Write-back is planned as a future power feature.
 
 ---
 
 ## What's working
 
 - [x] Plugin scaffolded and running in Figma desktop
-- [x] Frame selection and node traversal
-- [x] Extraction of: colours (solid fills), typography (font family, weight, size), spacing (auto layout item spacing), border radius
-- [x] Rules-based token naming using HSL analysis and scale mapping
-- [x] 3-tier colour naming: `color.primitive.{hue}.{shade}`
-- [x] Gray detection threshold raised to 20% saturation (fixes cool gray misclassification)
-- [x] Typography scale: display / heading / body / caption + bold / regular
+- [x] Frame selection and full node traversal
+- [x] Extraction of: colors, typography, spacing, border radius, border width, drop shadows
+- [x] Typography deduplication — identical text node combinations filtered before naming
+- [x] Rules-based token naming (HSL analysis, scale mapping)
+- [x] Color naming: `color.primitive.{hue}.{shade}` — 8 hue families, 10 shade steps
+- [x] Typography scale: display / heading-lg / heading / body-lg / body / body-sm / caption / caption-sm × bold / regular
 - [x] Spacing scale: xs / sm / md / lg / xl / 2xl
 - [x] Radius scale: none / sm / md / lg / full
-- [x] Tokens Studio JSON export (wrapped in `global` set)
-- [x] Colour swatches in the UI
-- [x] Summary count on extraction
-- [x] Multi-frame extraction -- second extraction triggers comparison against baseline
-- [x] Conflict resolution UI with side-by-side colour swatches
-- [x] Three resolution options per conflict: Keep existing / Use new / Keep both
-- [x] New tokens auto-added and shown for review
-- [x] Matched tokens collapsed by default
-- [x] Accept all suggestions -- merges resolved tokens and returns to results view
-- [x] "Add another frame" button -- continues building on existing token set
-- [x] Export button always available after extraction and after comparison
-- [x] Plugin width 400px, height 500px
+- [x] Border width scale: sm / md / lg / xl
+- [x] Shadow extraction with deduplication by signature
+- [x] Intra-extraction conflict detection — same-bucket collisions flagged immediately
+- [x] Multi-frame comparison with conflict resolution UI
+- [x] Side-by-side conflict cards — color swatches for colors, full detail for typography
+- [x] Keep left / Keep right / Keep both per conflict
+- [x] Keep both for all — resolve all conflicts in one click
+- [x] Learned preferences — decisions persisted and auto-applied to future extractions
+- [x] Results grouped by category (collapsible), colors sub-grouped by hue family
+- [x] Typography sorted by scale, values show size / line height / letter spacing
+- [x] Spacing and radii sorted by value
+- [x] Tokens Studio JSON export
+- [x] Accept all suggestions returns to results view with merged token set
+- [x] Plugin width 520px, height 600px
 
 ---
 
-## Known issues / bugs to fix
+## Known issues
 
-- **Existing variable bindings ignored:** Plugin currently reads raw hex values even when a node already has a Figma variable bound to it. Should check `node.boundVariables` first and use the existing token name if present.
-- **Duplicate shade slots within single extraction:** When two colours from the same frame map to the same shade bucket, they should trigger the conflict resolution UI immediately rather than auto-numbering with `-2`.
-- **Typography in comparison view:** Typography conflicts not yet showing detailed values side by side in the comparison screen.
-- **Baseline resets on plugin close:** `baselineTokens` lives in memory and is lost when the plugin is closed. Persistence across sessions not yet implemented.
+- **Baseline resets on plugin close** — `baselineTokens` lives in memory. Persistence across sessions not yet implemented (learned rules persist, but the token set itself does not).
+- **Existing Figma Variables ignored** — plugin reads raw values even when a node has a variable bound. Should check `boundVariables` first.
+- **Typography [object Object] on second extraction** — intermittent display issue when typography tokens come through the comparison path.
 
 ---
 
-## Next steps (priority order)
+## Roadmap
 
-1. **Check `node.boundVariables` before extracting raw values** -- use existing token names where they exist, fall back to rules-based naming only when nothing is bound
-2. **Fix intra-frame duplicate handling** -- flag same-frame shade collisions in the conflict UI rather than auto-numbering
-3. **Persist token store across plugin sessions** -- use Figma's `clientStorage` API to save and reload the accumulated token set
-4. **Write-back to Figma canvas** -- apply the winning token to all layers using the losing colour value
-5. **Add Anthropic API layer for semantic naming** -- optional step that uses Claude to suggest better token names, grouped under a user-provided API key
-6. **Tier 2 token generation** -- map primitives to semantic roles (success, error, brand, neutral etc.)
-7. **Test on more files** -- validate extraction quality and naming accuracy across a wider range of product screens
+- [ ] Semantic token layer — map primitives to roles (brand, text, background, status)
+- [ ] Persist full token store across sessions via `clientStorage`
+- [ ] Write-back to Figma canvas — apply winning token to all layers using the losing value
+- [ ] Figma Variables support — detect and respect existing bound variables
+- [ ] Publish to Figma Community
 
 ---
 
 ## Session log
 
 ### Session 1
-- Set up plugin from scratch: VS Code, Node.js, Figma desktop, plugin scaffolding
-- Built extraction logic for colours, typography, spacing, radii
-- Added rules-based 3-tier naming
-- Fixed TypeScript compilation issues (function ordering, optional chaining compatibility)
+- Plugin scaffolded from scratch: VS Code, Node.js, Figma desktop
+- Built extraction logic for colors, typography, spacing, radii
+- Rules-based 3-tier naming
+- Fixed TypeScript compilation issues
 - Fixed Tokens Studio JSON structure (tokens must be nested inside a named set)
 - Fixed UI display bugs ([object Object], undefined values)
 - Successfully imported generated JSON into Tokens Studio
-- Identified first real-world issues: gray misclassification, duplicate shade slots, ignored variable bindings
 
 ### Session 2
-- Fixed gray misclassification (raised saturation threshold from 10% to 20%)
-- Built multi-frame comparison logic in `code.ts`
-- Built conflict resolution UI (State 3) with side-by-side colour swatches
-- Three resolution options per conflict: Keep existing / Use new / Keep both
-- Accept all suggestions merges resolved tokens and returns to results view
-- Fixed "Extract from another frame" label to "Add another frame" for clarity
-- Fixed accept triggering unwanted file download
+- Fixed gray misclassification (raised saturation threshold to 20%)
+- Built multi-frame comparison logic
+- Built conflict resolution UI with side-by-side color swatches
 - Published to GitHub at github.com/tiffymoon/token-extractor
+
+### Session 3
+- Intra-extraction conflict detection (same-bucket collisions no longer silently suffixed)
+- Results view grouped by hue family, sorted by shade
+- Collapsible categories in results view
+- Typography detail in conflict cards (size, line height, letter spacing)
+- Keep both for all button
+- Fixed accept all suggestions flow (currentTokens not being set on comparison path)
+- Added line height and letter spacing to typography extraction
+- Typography deduplication before naming
+- Learned preferences via clientStorage — auto-resolves known conflicts on future extractions
+- Border width extraction (strokeWeight + individualStrokeWeights)
+- Drop shadow extraction with deduplication
+- Plugin width increased to 520px
+- Full code.ts rewrite to clear accumulated debt (duplicate traverse blocks, orphaned functions, stray expressions)

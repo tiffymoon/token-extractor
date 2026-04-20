@@ -3,226 +3,41 @@
   <head>
     <meta charset="utf-8">
     <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family: Inter, sans-serif;
-        font-size: 13px;
-        color: #333;
-        background: #fff;
-        padding: 16px;
-        width: 400px;
-      }
-
-      h2 {
-        font-size: 15px;
-        font-weight: 600;
-        margin-bottom: 8px;
-      }
-
-      p {
-        color: #666;
-        line-height: 1.5;
-        margin-bottom: 24px;
-      }
-
-      .error {
-        color: #e53e3e;
-        margin-bottom: 16px;
-      }
-
-      button {
-        width: 100%;
-        padding: 10px;
-        background: #18a0fb;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        margin-bottom: 8px;
-      }
-
-      button:hover {
-        background: #0d8de3;
-      }
-
-      button.secondary {
-        background: #f0f0f0;
-        color: #333;
-      }
-
-      button.secondary:hover {
-        background: #e0e0e0;
-      }
-
-      .token-group {
-        margin-bottom: 16px;
-      }
-
-      .token-group h3 {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #999;
-        margin-bottom: 8px;
-      }
-
-      .token-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 0;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 12px;
-      }
-
-      .color-swatch {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-        border: 1px solid #e0e0e0;
-        flex-shrink: 0;
-      }
-
-      .token-value {
-        color: #666;
-        margin-left: auto;
-        font-family: monospace;
-      }
-
-      .summary {
-        background: #f7f9fc;
-        border-radius: 6px;
-        padding: 12px;
-        margin-bottom: 16px;
-        font-size: 12px;
-        color: #555;
-        line-height: 1.6;
-      }
-
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Inter, sans-serif; font-size: 13px; color: #333; background: #fff; padding: 16px; width: 400px; }
+      h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+      p { color: #666; line-height: 1.5; margin-bottom: 24px; }
+      .error { color: #e53e3e; margin-bottom: 16px; }
+      button { width: 100%; padding: 10px; background: #18a0fb; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 8px; }
+      button:hover { background: #0d8de3; }
+      button.secondary { background: #f0f0f0; color: #333; }
+      button.secondary:hover { background: #e0e0e0; }
+      .token-group { margin-bottom: 16px; }
+      .token-group h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin-bottom: 8px; }
+      .token-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+      .color-swatch { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #e0e0e0; flex-shrink: 0; }
+      .token-value { color: #666; margin-left: auto; font-family: monospace; }
+      .summary { background: #f7f9fc; border-radius: 6px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #555; line-height: 1.6; }
       #state-comparison { display: none; }
-
-      .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 0 6px;
-        border-bottom: 1px solid #e0e0e0;
-        margin-bottom: 8px;
-      }
-
-      .section-title {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin: 0;
-      }
-
+      .section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 6px; border-bottom: 1px solid #e0e0e0; margin-bottom: 8px; }
+      .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
       .section-title.conflicts { color: #e53e3e; }
       .section-title.added { color: #38a169; }
       .section-title.merged { color: #999; }
-
-      .section-count {
-        font-size: 11px;
-        color: #999;
-      }
-
-      .collapsible {
-        cursor: pointer;
-      }
-
-      .conflict-card {
-        background: #fff8f8;
-        border: 1px solid #fed7d7;
-        border-radius: 6px;
-        padding: 10px;
-        margin-bottom: 8px;
-      }
-
-      .conflict-swatches {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-
-      .conflict-swatch-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .conflict-swatch {
-        width: 100%;
-        height: 40px;
-        border-radius: 4px;
-        border: 1px solid #e0e0e0;
-      }
-
-      .conflict-swatch-label {
-        font-size: 10px;
-        color: #666;
-        font-family: monospace;
-      }
-
-      .conflict-swatch-key {
-        font-size: 10px;
-        color: #333;
-        font-weight: 500;
-      }
-
-      .conflict-actions {
-        display: flex;
-        gap: 6px;
-        margin-top: 6px;
-      }
-
-      .conflict-actions button {
-        flex: 1;
-        padding: 6px 4px;
-        font-size: 11px;
-        border-radius: 4px;
-        border: 1px solid #e0e0e0;
-        background: #fff;
-        color: #333;
-        cursor: pointer;
-      }
-
-      .conflict-actions button:hover {
-        background: #f0f0f0;
-      }
-
-      .conflict-actions button.selected {
-        background: #18a0fb;
-        color: white;
-        border-color: #18a0fb;
-      }
-
-      .added-card {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 0;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 12px;
-      }
-
-      .added-swatch {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-        border: 1px solid #e0e0e0;
-        flex-shrink: 0;
-}
-
+      .section-count { font-size: 11px; color: #999; }
+      .collapsible { cursor: pointer; }
+      .conflict-card { background: #fff8f8; border: 1px solid #fed7d7; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+      .conflict-swatches { display: flex; gap: 8px; margin-bottom: 8px; }
+      .conflict-swatch-item { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+      .conflict-swatch { width: 100%; height: 40px; border-radius: 4px; border: 1px solid #e0e0e0; }
+      .conflict-swatch-label { font-size: 10px; color: #666; font-family: monospace; }
+      .conflict-swatch-key { font-size: 10px; color: #333; font-weight: 500; }
+      .conflict-actions { display: flex; gap: 6px; margin-top: 6px; }
+      .conflict-actions button { flex: 1; padding: 6px 4px; font-size: 11px; border-radius: 4px; border: 1px solid #e0e0e0; background: #fff; color: #333; cursor: pointer; }
+      .conflict-actions button:hover { background: #f0f0f0; }
+      .conflict-actions button.selected { background: #18a0fb; color: white; border-color: #18a0fb; }
+      .added-card { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+      .added-swatch { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #e0e0e0; flex-shrink: 0; }
       #state-empty { display: block; }
       #state-results { display: none; }
     </style>
@@ -247,339 +62,495 @@
     </div>
 
     <!-- State 3: Comparison -->
-<div id="state-comparison">
-  <h2>Review Tokens</h2>
-  <div class="summary" id="comparison-summary"></div>
-
-  <!-- Conflicts -->
-  <div id="conflicts-section">
-    <div class="section-header">
-      <h3 class="section-title conflicts">⚠️ Conflicts</h3>
-      <span class="section-count" id="conflicts-count"></span>
+    <div id="state-comparison">
+      <h2>Review Tokens</h2>
+      <div class="summary" id="comparison-summary"></div>
+      <div id="conflicts-section">
+        <div class="section-header">
+          <h3 class="section-title conflicts">Conflicts</h3>
+          <span class="section-count" id="conflicts-count"></span>
+        </div>
+        <div id="conflicts-list"></div>
+      </div>
+      <div id="added-section">
+        <div class="section-header">
+          <h3 class="section-title added">New tokens</h3>
+          <span class="section-count" id="added-count"></span>
+        </div>
+        <div id="added-list"></div>
+      </div>
+      <div id="merged-section">
+        <div class="section-header collapsible" id="merged-header">
+          <h3 class="section-title merged">Matched</h3>
+          <span class="section-count" id="merged-count"></span>
+        </div>
+        <div id="merged-list" style="display:none"></div>
+      </div>
+      <button id="keep-both-all-btn" class="secondary" style="margin-bottom:4px;">Keep both for all conflicts</button>
+      <button id="accept-all-btn">Accept all suggestions</button>
+      <button id="export-comparison-btn" class="secondary" style="margin-top:8px">Export as Tokens Studio JSON</button>
     </div>
-    <div id="conflicts-list"></div>
-  </div>
-
-  <!-- New tokens -->
-  <div id="added-section">
-    <div class="section-header">
-      <h3 class="section-title added">✚ New tokens</h3>
-      <span class="section-count" id="added-count"></span>
-    </div>
-    <div id="added-list"></div>
-  </div>
-
-  <!-- Merged -->
-  <div id="merged-section">
-    <div class="section-header collapsible" id="merged-header">
-      <h3 class="section-title merged">✓ Matched</h3>
-      <span class="section-count" id="merged-count"></span>
-    </div>
-    <div id="merged-list" style="display:none"></div>
-  </div>
-
-  <button id="accept-all-btn">Accept all suggestions</button>
-  <button id="export-comparison-btn" class="secondary" style="margin-top:8px">Export as Tokens Studio JSON</button>
-</div>
 
     <script>
-      let tokenStore = {};
+      var learnedRules = [];
+      var tokenStore = {};
+      var currentTokens = null;
+      var resolvedTokens = {};
+      var conflictDecisions = {};
+      
 
-      // Handle messages from code.ts
-      window.onmessage = (event) => {
-        const msg = event.data.pluginMessage;
+    parent.postMessage({ pluginMessage: { type: 'load-rules' } }, '*');
+
+      window.onmessage = function(event) {
+        var msg = event.data.pluginMessage;
         if (!msg) return;
-
+        if (msg.type === 'rules-loaded') {
+          learnedRules = msg.rules || [];
+          return;
+        }
         if (msg.type === 'error') {
           document.getElementById('error-msg').style.display = 'block';
           document.getElementById('error-msg').textContent = msg.message;
         }
-
         if (msg.type === 'extracted') {
+          currentTokens = msg.tokens;
           tokenStore = msg.tokens;
           showResults(msg.tokens);
         }
-
         if (msg.type === 'comparison') {
+          if (msg.tokens) currentTokens = msg.tokens;
           showComparison(msg.comparison);
         }
       };
 
-      // Extract button
-      document.getElementById('extract-btn').addEventListener('click', () => {
+      document.getElementById('extract-btn').addEventListener('click', function() {
         document.getElementById('error-msg').style.display = 'none';
         parent.postMessage({ pluginMessage: { type: 'extract' } }, '*');
       });
 
-      // Extract another button
-      document.getElementById('extract-another-btn').addEventListener('click', () => {
+      document.getElementById('extract-another-btn').addEventListener('click', function() {
         document.getElementById('state-results').style.display = 'none';
         document.getElementById('state-empty').style.display = 'block';
       });
 
-      // Export button
-      document.getElementById('export-btn').addEventListener('click', () => {
-        const json = buildTokenStudioJSON(tokenStore);
-        const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+      document.getElementById('export-btn').addEventListener('click', function() {
+        var json = buildTokenStudioJSON(tokenStore);
+        var blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
         a.href = url;
         a.download = 'tokens.json';
         a.click();
       });
-      let resolvedTokens = {};
-      let conflictDecisions = {};
 
-      function showComparison(comparison) {
-        document.getElementById('state-empty').style.display = 'none';
-        document.getElementById('state-results').style.display = 'none';
-        document.getElementById('state-comparison').style.display = 'block';
-
-        const { merged, conflicts, added } = comparison;
-
-        document.getElementById('comparison-summary').innerHTML =
-          `<strong>${conflicts.length}</strong> conflicts · <strong>${Object.keys(added).length}</strong> new tokens · <strong>${Object.keys(merged).length}</strong> matched`;
-
-        document.getElementById('conflicts-count').textContent = conflicts.length;
-        document.getElementById('added-count').textContent = Object.keys(added).length;
-        document.getElementById('merged-count').textContent = Object.keys(merged).length;
-
-        // Render conflicts
-        const conflictsList = document.getElementById('conflicts-list');
-        conflictsList.innerHTML = '';
-        conflictDecisions = {};
-
-        conflicts.forEach((conflict, index) => {
-          const isColor = conflict.type === 'color';
-          const card = document.createElement('div');
-          card.className = 'conflict-card';
-
-          if (isColor) {
-            card.innerHTML = `
-              <div class="conflict-swatches">
-                <div class="conflict-swatch-item">
-                  <div class="conflict-swatch" style="background:${conflict.existing.value}"></div>
-                  <div class="conflict-swatch-key">${conflict.existing.key}</div>
-                  <div class="conflict-swatch-label">${conflict.existing.value}</div>
-                </div>
-                <div class="conflict-swatch-item">
-                  <div class="conflict-swatch" style="background:${conflict.incoming.value}"></div>
-                  <div class="conflict-swatch-key">${conflict.incoming.key}</div>
-                  <div class="conflict-swatch-label">${conflict.incoming.value}</div>
-                </div>
-              </div>
-              <div class="conflict-actions">
-                <button onclick="resolveConflict(${index}, 'existing', this)">Keep left</button>
-                <button onclick="resolveConflict(${index}, 'incoming', this)">Keep right</button>
-                <button onclick="resolveConflict(${index}, 'both', this)">Keep both</button>
-              </div>`;
-          } else {
-            card.innerHTML = `
-              <div style="font-size:12px; margin-bottom:8px;">
-                <div style="color:#666; margin-bottom:2px">${conflict.type}</div>
-                <div><strong>${conflict.existing.key}</strong> vs <strong>${conflict.incoming.key}</strong></div>
-              </div>
-              <div class="conflict-actions">
-                <button onclick="resolveConflict(${index}, 'existing', this)">Keep existing</button>
-                <button onclick="resolveConflict(${index}, 'incoming', this)">Use new</button>
-                <button onclick="resolveConflict(${index}, 'both', this)">Keep both</button>
-              </div>`;
+      document.getElementById('keep-both-all-btn').addEventListener('click', function() {
+        Object.keys(conflictDecisions).forEach(function(i) {
+          conflictDecisions[i].decision = 'both';
+          var cards = document.querySelectorAll('.conflict-card');
+          var card = cards[i];
+          if (card) {
+            card.querySelectorAll('button').forEach(function(b) { b.classList.remove('selected'); });
+            var btns = card.querySelectorAll('.conflict-actions button');
+            if (btns[2]) btns[2].classList.add('selected');
           }
-
-          conflictsList.appendChild(card);
-          conflictDecisions[index] = { decision: 'existing', conflict };
         });
+      });
 
-        // Render added tokens
-        const addedList = document.getElementById('added-list');
-        addedList.innerHTML = '';
-        Object.entries(added).forEach(([key, token]) => {
-          const t = token;
-          const isColor = t.type === 'color';
-          const div = document.createElement('div');
-          div.className = 'added-card';
-          if (isColor) {
-            div.innerHTML = `
-              <div class="added-swatch" style="background:${t.value}"></div>
-              <span>${key}</span>
-              <span class="token-value">${t.value}</span>`;
+      document.getElementById('accept-all-btn').addEventListener('click', function() {
+        if (!currentTokens) return;
+        Object.values(conflictDecisions).forEach(function(item) {
+          var decision = item.decision;
+          var conflict = item.conflict;
+          var category = conflict.type === 'color' ? 'colors'
+            : conflict.type === 'typography' ? 'typography'
+            : conflict.type === 'spacing' ? 'spacing' : 'radii';
+          var typeKey = conflict.type === 'color' ? 'color' : conflict.type;
+          var sameKey = conflict.existing.key === conflict.incoming.key;
+
+          if (decision === 'both' || sameKey) {
+            // Same bucket — keep existing (first value wins), nothing to delete
+            currentTokens[category][conflict.existing.key] = { value: conflict.existing.value, type: typeKey };
+          } else if (decision === 'incoming') {
+            currentTokens[category][conflict.incoming.key] = { value: conflict.incoming.value, type: typeKey };
+            delete currentTokens[category][conflict.existing.key];
           } else {
-            div.innerHTML = `
-              <span>${key}</span>
-              <span class="token-value">${t.value}</span>`;
+            // existing (default)
+            currentTokens[category][conflict.existing.key] = { value: conflict.existing.value, type: typeKey };
+            delete currentTokens[category][conflict.incoming.key];
           }
-          addedList.appendChild(div);
         });
+        tokenStore = currentTokens;
 
-        // Merged -- collapsible
-        document.getElementById('merged-header').addEventListener('click', () => {
-          const list = document.getElementById('merged-list');
-          list.style.display = list.style.display === 'none' ? 'block' : 'none';
+        // Save decisions as learned rules
+        var newRules = [];
+        Object.values(conflictDecisions).forEach(function(item) {
+          var decision = item.decision;
+          var conflict = item.conflict;
+          if (decision !== 'both') {
+            var winner = decision === 'incoming' ? conflict.incoming : conflict.existing;
+            newRules.push({ type: conflict.type, key: conflict.existing.key, winnerValue: winner.value });
+            learnedRules.push({ type: conflict.type, key: conflict.existing.key, winnerValue: winner.value });
+          }
         });
+        if (newRules.length > 0) {
+          parent.postMessage({ pluginMessage: { type: 'save-rules', rules: newRules } }, '*');
+        }
 
-        const mergedList = document.getElementById('merged-list');
-        mergedList.innerHTML = '';
-        Object.entries(merged).forEach(([key, token]) => {
-          const t = token;
-          const div = document.createElement('div');
-          div.className = 'added-card';
-          div.innerHTML = `<span>${key}</span><span class="token-value">${t.value || t}</span>`;
-          mergedList.appendChild(div);
-        });
+        document.getElementById('state-comparison').style.display = 'none';
+        document.getElementById('state-results').style.display = 'block';
+        showResults(currentTokens);
+      });
 
-        resolvedTokens = { ...merged, ...added };
+      document.getElementById('export-comparison-btn').addEventListener('click', function() {
+        var json = { global: resolvedTokens };
+        var blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'tokens.json';
+        a.click();
+      });
+
+      function formatConflictValue(val, type) {
+        if (val && typeof val === 'object') {
+          var lines = [];
+          if (val.fontFamily) lines.push(val.fontFamily + ' ' + (val.fontWeight || ''));
+          if (val.fontSize) lines.push('Size: ' + parseFloat(val.fontSize).toFixed(0) + 'px');
+          if (val.lineHeight != null) lines.push('Line height: ' + parseFloat(val.lineHeight).toFixed(0) + 'px');
+          if (val.letterSpacing != null) lines.push('Letter spacing: ' + parseFloat(val.letterSpacing).toFixed(2));
+          return lines.join('<br>');
+        }
+        return String(val) + (type === 'spacing' || type === 'radius' ? 'px' : '');
       }
 
       function resolveConflict(index, decision, btn) {
         conflictDecisions[index].decision = decision;
-
-        // Update button styles
-        const card = btn.closest('.conflict-card');
-        card.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+        var card = btn.closest('.conflict-card');
+        card.querySelectorAll('button').forEach(function(b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
-
-        // Update resolved tokens
-        const conflict = conflictDecisions[index].conflict;
+        var conflict = conflictDecisions[index].conflict;
+        var typeKey = conflict.type === 'color' ? 'color' : conflict.type;
         if (decision === 'existing') {
-          resolvedTokens[conflict.existing.key] = { value: conflict.existing.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+          resolvedTokens[conflict.existing.key] = { value: conflict.existing.value, type: typeKey };
           delete resolvedTokens[conflict.incoming.key];
         } else if (decision === 'incoming') {
-          resolvedTokens[conflict.incoming.key] = { value: conflict.incoming.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+          resolvedTokens[conflict.incoming.key] = { value: conflict.incoming.value, type: typeKey };
           delete resolvedTokens[conflict.existing.key];
         } else {
-          resolvedTokens[conflict.existing.key] = { value: conflict.existing.value, type: conflict.type === 'color' ? 'color' : conflict.type };
-          resolvedTokens[conflict.incoming.key] = { value: conflict.incoming.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+          resolvedTokens[conflict.existing.key] = { value: conflict.existing.value, type: typeKey };
+          resolvedTokens[conflict.incoming.key] = { value: conflict.incoming.value, type: typeKey };
         }
       }
 
-      document.getElementById('accept-all-btn').addEventListener('click', () => {
-        tokenStore = resolvedTokens;
-        document.getElementById('state-comparison').style.display = 'none';
-        document.getElementById('state-results').style.display = 'block';
-        showResults(tokenStore);
-      });
+      function showComparison(comparison) {
+        // Auto-resolve conflicts that match learned rules
+        var unresolved = [];
+        comparison.conflicts.forEach(function(conflict) {
+          var rule = learnedRules.find(function(r) {
+            return r.type === conflict.type && r.key === conflict.existing.key;
+          });
+          if (rule) {
+            // Auto-apply: find which side matches the rule's winner
+            var decision = conflict.existing.value === rule.winnerValue ? 'existing' : 'incoming';
+            var winner = decision === 'existing' ? conflict.existing : conflict.incoming;
+            if (currentTokens) {
+              var category = conflict.type === 'color' ? 'colors'
+                : conflict.type === 'typography' ? 'typography'
+                : conflict.type === 'spacing' ? 'spacing' : 'radii';
+              currentTokens[category][winner.key] = { value: winner.value, type: conflict.type === 'color' ? 'color' : conflict.type };
+            }
+          } else {
+            unresolved.push(conflict);
+          }
+        });
+        comparison.conflicts = unresolved;
 
-      document.getElementById('export-comparison-btn').addEventListener('click', () => {
-        exportResolvedTokens();
-      });
+        // If everything was auto-resolved, skip straight to results
+        if (unresolved.length === 0 && Object.keys(comparison.added).length === 0) {
+          document.getElementById('state-results').style.display = 'block';
+          showResults(currentTokens);
+          return;
+        }
+        document.getElementById('state-empty').style.display = 'none';
+        document.getElementById('state-results').style.display = 'none';
+        document.getElementById('state-comparison').style.display = 'block';
 
-      function exportResolvedTokens() {
-        const json = { global: resolvedTokens };
-        const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'tokens.json';
-        a.click();
+        var merged = comparison.merged;
+        var conflicts = comparison.conflicts;
+        var added = comparison.added;
+
+        document.getElementById('comparison-summary').innerHTML =
+          '<strong>' + conflicts.length + '</strong> conflicts · ' +
+          '<strong>' + Object.keys(added).length + '</strong> new tokens · ' +
+          '<strong>' + Object.keys(merged).length + '</strong> matched';
+        document.getElementById('conflicts-count').textContent = conflicts.length;
+        document.getElementById('added-count').textContent = Object.keys(added).length;
+        document.getElementById('merged-count').textContent = Object.keys(merged).length;
+
+        var conflictsList = document.getElementById('conflicts-list');
+        conflictsList.innerHTML = '';
+        conflictDecisions = {};
+        resolvedTokens = {};
+        Object.keys(merged).forEach(function(k) { resolvedTokens[k] = merged[k]; });
+        Object.keys(added).forEach(function(k) { resolvedTokens[k] = added[k]; });
+
+        conflicts.forEach(function(conflict, index) {
+          var card = document.createElement('div');
+          card.className = 'conflict-card';
+          var actions =
+            '<div class="conflict-actions">' +
+              '<button onclick="resolveConflict(' + index + ', \'existing\', this)">Keep left</button>' +
+              '<button onclick="resolveConflict(' + index + ', \'incoming\', this)">Keep right</button>' +
+              '<button onclick="resolveConflict(' + index + ', \'both\', this)">Keep both</button>' +
+            '</div>';
+
+          if (conflict.type === 'color') {
+            card.innerHTML =
+              '<div class="conflict-swatches">' +
+                '<div class="conflict-swatch-item">' +
+                  '<div class="conflict-swatch" style="background:' + conflict.existing.value + '"></div>' +
+                  '<div class="conflict-swatch-key">' + conflict.existing.key + '</div>' +
+                  '<div class="conflict-swatch-label">' + conflict.existing.value + '</div>' +
+                '</div>' +
+                '<div class="conflict-swatch-item">' +
+                  '<div class="conflict-swatch" style="background:' + conflict.incoming.value + '"></div>' +
+                  '<div class="conflict-swatch-key">' + conflict.incoming.key + '</div>' +
+                  '<div class="conflict-swatch-label">' + conflict.incoming.value + '</div>' +
+                '</div>' +
+              '</div>' + actions;
+          } else {
+            var reason = conflict.reason
+              ? '<div style="color:#999;font-size:10px;margin-bottom:6px;">' + conflict.reason + '</div>'
+              : '';
+            var existingVal = formatConflictValue(conflict.existing.value, conflict.type);
+            var incomingVal = formatConflictValue(conflict.incoming.value, conflict.type);
+            card.innerHTML =
+              '<div style="font-size:12px;margin-bottom:8px;">' +
+                '<div style="color:#666;margin-bottom:4px;text-transform:capitalize;">' + conflict.type + '</div>' +
+                reason +
+                '<div class="conflict-swatches">' +
+                  '<div class="conflict-swatch-item">' +
+                    '<div class="conflict-swatch-key">' + conflict.existing.key + '</div>' +
+                    '<div class="conflict-swatch-label" style="margin-top:4px;line-height:1.6;">' + existingVal + '</div>' +
+                  '</div>' +
+                  '<div class="conflict-swatch-item">' +
+                    '<div class="conflict-swatch-key">' + conflict.incoming.key + '</div>' +
+                    '<div class="conflict-swatch-label" style="margin-top:4px;line-height:1.6;">' + incomingVal + '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' + actions;
+          }
+
+          conflictsList.appendChild(card);
+          conflictDecisions[index] = { decision: 'existing', conflict: conflict };
+        });
+
+        var addedList = document.getElementById('added-list');
+        addedList.innerHTML = '';
+        Object.keys(added).forEach(function(key) {
+          var t = added[key];
+          var div = document.createElement('div');
+          div.className = 'added-card';
+          div.innerHTML = (t.type === 'color' ? '<div class="added-swatch" style="background:' + t.value + '"></div>' : '') +
+            '<span>' + key + '</span><span class="token-value">' + t.value + '</span>';
+          addedList.appendChild(div);
+        });
+
+        document.getElementById('merged-header').onclick = function() {
+          var ml = document.getElementById('merged-list');
+          ml.style.display = ml.style.display === 'none' ? 'block' : 'none';
+        };
+        var mergedList = document.getElementById('merged-list');
+        mergedList.innerHTML = '';
+        Object.keys(merged).forEach(function(key) {
+          var t = merged[key];
+          var div = document.createElement('div');
+          div.className = 'added-card';
+          div.innerHTML = '<span>' + key + '</span><span class="token-value">' + (t.value || t) + '</span>';
+          mergedList.appendChild(div);
+        });
       }
 
+      function makeCollapsible(list, title, renderFn) {
+        var wrapper = document.createElement('div');
+        wrapper.style.marginBottom = '8px';
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;border-bottom:2px solid #e0e0e0;margin-bottom:4px;';
+        var arrow = document.createElement('span');
+        arrow.textContent = '▾';
+        arrow.style.cssText = 'font-size:11px;color:#999;';
+        var label = document.createElement('h3');
+        label.textContent = title;
+        label.style.cssText = 'font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#555;margin:0;';
+        header.appendChild(label);
+        header.appendChild(arrow);
+        var body = document.createElement('div');
+        renderFn(body);
+        header.addEventListener('click', function() {
+          var open = body.style.display !== 'none';
+          body.style.display = open ? 'none' : 'block';
+          arrow.textContent = open ? '▸' : '▾';
+        });
+        wrapper.appendChild(header);
+        wrapper.appendChild(body);
+        list.appendChild(wrapper);
+      }
 
+      function showResults(tokens) {
+        document.getElementById('state-empty').style.display = 'none';
+        document.getElementById('state-results').style.display = 'block';
 
-function showResults(tokens) {
-  document.getElementById('state-empty').style.display = 'none';
-  document.getElementById('state-results').style.display = 'block';
+        var colorCount   = Object.keys(tokens.colors).length;
+        var typoCount    = Object.keys(tokens.typography).length;
+        var spacingCount = Object.keys(tokens.spacing).length;
+        var radiiCount   = Object.keys(tokens.radii).length;
 
-  const colorCount = Object.keys(tokens.colors).length;
-  const typoCount = Object.keys(tokens.typography).length;
-  const spacingCount = Object.keys(tokens.spacing).length;
-  const radiiCount = Object.keys(tokens.radii).length;
+        document.getElementById('summary').innerHTML =
+          'Found <strong>' + colorCount + '</strong> colors, ' +
+          '<strong>' + typoCount + '</strong> text styles, ' +
+          '<strong>' + spacingCount + '</strong> spacing, ' +
+          '<strong>' + radiiCount + '</strong> radii, ' +
+          '<strong>' + Object.keys(tokens.borderWidths || {}).length + '</strong> border widths, ' +
+          '<strong>' + Object.keys(tokens.shadows || {}).length + '</strong> shadows';
 
-  document.getElementById('summary').innerHTML =
-    `Found <strong>${colorCount}</strong> colors, <strong>${typoCount}</strong> text styles, <strong>${spacingCount}</strong> spacing values, <strong>${radiiCount}</strong> radii`;
+        var list = document.getElementById('token-list');
+        list.innerHTML = '';
 
-  const list = document.getElementById('token-list');
-  list.innerHTML = '';
+        if (colorCount > 0) {
+          makeCollapsible(list, 'Colors (' + colorCount + ')', function(container) {
+            var families = {};
+            var familyOrder = ['red','orange','yellow','green','blue','purple','pink','neutral'];
+            Object.keys(tokens.colors).forEach(function(key) {
+              var token = tokens.colors[key];
+              var family = key.split('.')[2] || 'other';
+              if (!families[family]) families[family] = [];
+              families[family].push({ key: key, token: token });
+            });
+            Object.keys(families).forEach(function(f) {
+              families[f].sort(function(a, b) {
+                return (parseInt(a.key.split('.').pop()) || 0) - (parseInt(b.key.split('.').pop()) || 0);
+              });
+            });
+            var ordered = familyOrder.filter(function(f) { return !!families[f]; })
+              .concat(Object.keys(families).filter(function(f) { return familyOrder.indexOf(f) === -1; }));
+            ordered.forEach(function(family) {
+              var group = document.createElement('div');
+              group.className = 'token-group';
+              group.innerHTML = '<h3>Color - ' + family.charAt(0).toUpperCase() + family.slice(1) + '</h3>';
+              families[family].forEach(function(item) {
+                var hex = item.token.value || item.token;
+                group.innerHTML +=
+                  '<div class="token-item">' +
+                    '<div class="color-swatch" style="background:' + hex + '"></div>' +
+                    '<span>' + item.key + '</span>' +
+                    '<span class="token-value">' + hex + '</span>' +
+                  '</div>';
+              });
+              container.appendChild(group);
+            });
+          });
+        }
 
-  // Colors
-  if (colorCount > 0) {
-    const group = document.createElement('div');
-    group.className = 'token-group';
-    group.innerHTML = '<h3>Colors</h3>';
-    Object.entries(tokens.colors).forEach(([key, token]) => {
-      const hex = token.value || token;
-      group.innerHTML += `
-        <div class="token-item">
-          <div class="color-swatch" style="background:${hex}"></div>
-          <span>${key}</span>
-          <span class="token-value">${hex}</span>
-        </div>`;
-    });
-    list.appendChild(group);
-  }
+        if (typoCount > 0) {
+          makeCollapsible(list, 'Typography (' + typoCount + ')', function(container) {
+            var group = document.createElement('div');
+            group.className = 'token-group';
+            Object.keys(tokens.typography).forEach(function(key) {
+              var token = tokens.typography[key];
+              var v = (token && token.value && typeof token.value === 'object') ? token.value : (token && typeof token === 'object' && token.fontFamily) ? token : (typeof token === 'object' ? token : {});
+              var fam = v.fontFamily || 'unknown';
+              var wt  = v.fontWeight || '';
+              var sz  = v.fontSize ? parseFloat(String(v.fontSize)).toFixed(0) + 'px' : '?';
+              var lh  = v.lineHeight != null ? ' / ' + parseFloat(v.lineHeight).toFixed(0) + 'px' : '';
+              var ls  = v.letterSpacing != null ? ' ls:' + parseFloat(v.letterSpacing).toFixed(2) : '';
+              group.innerHTML +=
+                '<div class="token-item" style="align-items:flex-start;">' +
+                  '<span style="flex-shrink:0;min-width:160px;">' + key + '</span>' +
+                  '<span class="token-value" style="margin-left:0;text-align:left;">' + fam + ' ' + wt + ' ' + sz + lh + ls + '</span>' +
+                '</div>';
+            });
+            container.appendChild(group);
+          });
+        }
 
-  // Typography
-  if (typoCount > 0) {
-    const group = document.createElement('div');
-    group.className = 'token-group';
-    group.innerHTML = '<h3>Typography</h3>';
-    Object.entries(tokens.typography).forEach(([key, token]) => {
-    const v = (token && typeof token === 'object' && token.value && typeof token.value === 'object')
-      ? token.value
-      : (typeof token === 'object' ? token : {});
-    const family = v.fontFamily || 'unknown';
-    const weight = v.fontWeight || 'unknown';
-    const size = v.fontSize ? parseFloat(String(v.fontSize)).toFixed(2) : '?';
-      group.innerHTML += `
-        <div class="token-item">
-          <span>${key}</span>
-          <span class="token-value">${family} ${weight} ${size}px</span>
-        </div>`;
-    });
-    list.appendChild(group);
-  }
+        if (spacingCount > 0) {
+          makeCollapsible(list, 'Spacing (' + spacingCount + ')', function(container) {
+            var group = document.createElement('div');
+            group.className = 'token-group';
+            Object.keys(tokens.spacing)
+              .sort(function(a, b) {
+                return parseFloat(tokens.spacing[a].value || tokens.spacing[a]) - parseFloat(tokens.spacing[b].value || tokens.spacing[b]);
+              })
+              .forEach(function(key) {
+                var val = tokens.spacing[key].value || tokens.spacing[key];
+                group.innerHTML += '<div class="token-item"><span>' + key + '</span><span class="token-value">' + val + 'px</span></div>';
+              });
+            container.appendChild(group);
+          });
+        }
 
-  // Spacing
-  if (spacingCount > 0) {
-    const group = document.createElement('div');
-    group.className = 'token-group';
-    group.innerHTML = '<h3>Spacing</h3>';
-    Object.entries(tokens.spacing).forEach(([key, token]) => {
-      const val = token.value || token;
-      group.innerHTML += `
-        <div class="token-item">
-          <span>${key}</span>
-          <span class="token-value">${val}px</span>
-        </div>`;
-    });
-    list.appendChild(group);
-  }
+        if (radiiCount > 0) {
+          makeCollapsible(list, 'Border Radius (' + radiiCount + ')', function(container) {
+            var group = document.createElement('div');
+            group.className = 'token-group';
+            Object.keys(tokens.radii)
+              .sort(function(a, b) {
+                return parseFloat(tokens.radii[a].value || tokens.radii[a]) - parseFloat(tokens.radii[b].value || tokens.radii[b]);
+              })
+              .forEach(function(key) {
+                var val = tokens.radii[key].value || tokens.radii[key];
+                group.innerHTML += '<div class="token-item"><span>' + key + '</span><span class="token-value">' + val + 'px</span></div>';
+              });
+            container.appendChild(group);
+          });
+        }
 
-  // Radii
-  if (radiiCount > 0) {
-    const group = document.createElement('div');
-    group.className = 'token-group';
-    group.innerHTML = '<h3>Border Radius</h3>';
-    Object.entries(tokens.radii).forEach(([key, token]) => {
-      const val = token.value || token;
-      group.innerHTML += `
-        <div class="token-item">
-          <span>${key}</span>
-          <span class="token-value">${val}px</span>
-        </div>`;
-    });
-    list.appendChild(group);
-  }
-}
+        var borderWidthCount = Object.keys(tokens.borderWidths || {}).length;
+        if (borderWidthCount > 0) {
+          makeCollapsible(list, 'Border Widths (' + borderWidthCount + ')', function(container) {
+            var group = document.createElement('div');
+            group.className = 'token-group';
+            Object.keys(tokens.borderWidths)
+              .sort(function(a, b) {
+                return parseFloat(tokens.borderWidths[a].value) - parseFloat(tokens.borderWidths[b].value);
+              })
+              .forEach(function(key) {
+                var val = tokens.borderWidths[key].value;
+                group.innerHTML += '<div class="token-item"><span>' + key + '</span><span class="token-value">' + val + 'px</span></div>';
+              });
+            container.appendChild(group);
+          });
+        }
+
+        var shadowCount = Object.keys(tokens.shadows || {}).length;
+        if (shadowCount > 0) {
+          makeCollapsible(list, 'Shadows (' + shadowCount + ')', function(container) {
+            var group = document.createElement('div');
+            group.className = 'token-group';
+            Object.keys(tokens.shadows).forEach(function(key) {
+              var v = tokens.shadows[key].value;
+              var desc = v.x + 'px ' + v.y + 'px ' + v.blur + 'px ' + v.spread + 'px ' + v.color + ' ' + v.opacity;
+              group.innerHTML +=
+                '<div class="token-item" style="align-items:flex-start;">' +
+                  '<span style="flex-shrink:0;min-width:160px;">' + key + '</span>' +
+                  '<span class="token-value" style="margin-left:0;">' + desc + '</span>' +
+                '</div>';
+            });
+            container.appendChild(group);
+          });
+        }
+      }
 
       function buildTokenStudioJSON(tokens) {
-        const json = {
-         global: {}
-       };
-
-         Object.entries(tokens.colors).forEach(([key, value]) => {
-           json.global[key] = { value, type: 'color' };
-         });
-
-          Object.entries(tokens.spacing).forEach(([key, value]) => {
-            json.global[key] = { value: String(value), type: 'spacing' };
-         });
-
-          Object.entries(tokens.radii).forEach(([key, value]) => {
-            json.global[key] = { value: String(value), type: 'borderRadius' };
-         });
-
-  return json;
-}
+        var json = { global: {} };
+        Object.keys(tokens.colors).forEach(function(k) { json.global[k] = tokens.colors[k]; });
+        Object.keys(tokens.typography).forEach(function(k) { json.global[k] = tokens.typography[k]; });
+        Object.keys(tokens.spacing).forEach(function(k) { json.global[k] = tokens.spacing[k]; });
+        Object.keys(tokens.radii).forEach(function(k) { json.global[k] = tokens.radii[k]; });
+        Object.keys(tokens.borderWidths || {}).forEach(function(k) { json.global[k] = tokens.borderWidths[k]; });
+        Object.keys(tokens.shadows || {}).forEach(function(k) { json.global[k] = tokens.shadows[k]; });
+        return json;
+      }
     </script>
   </body>
 </html>
